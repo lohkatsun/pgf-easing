@@ -56,11 +56,13 @@
 \ifeasing@withfpu
 \let\easing@divide\pgfmath@basic@divide@
 \let\easing@cos\pgfmath@basic@cos@
-\let\easing@pow\pgfmath@basic@pow@
+\let\easing@exp\pgfmath@basic@exp@
+\let\easing@ln\pgfmath@basic@ln@
 \else
 \let\easing@divide\pgfmathdivide@
 \let\easing@cos\pgfmathcos@
-\let\easing@pow\pgfmathpow@
+\let\easing@exp\pgfmathexp@
+\let\easing@ln\pgfmathln@
 \fi
 %    \end{macrocode}
 % \end{macro}
@@ -372,10 +374,10 @@
   \ifdim\pgf@x=0pt
   \edef\pgfmathresult{0}%
   \else
-  \pgfmath@basic@ln@{#1}%
+  \easing@ln{#1}%
   \pgf@x\pgfmathresult pt
   \pgf@x\easing@param@pow@exponent\pgf@x
-  \pgfmath@basic@exp@{\pgfmath@tonumber\pgf@x}%
+  \easing@exp{\pgfmath@tonumber\pgf@x}%
   \fi
   \pgfmathsmuggle\pgfmathresult
   \endgroup
