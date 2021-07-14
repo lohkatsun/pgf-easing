@@ -1,0 +1,9 @@
+Makefile
+*.test.*
+*.code.tex
+*.aux
+*.bak
+*.glo
+*.idx
+*.log
+*.pgf
