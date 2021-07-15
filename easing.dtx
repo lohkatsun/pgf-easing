@@ -54,8 +54,8 @@
 %     ({1+\graphmarginx},0) -- (-\graphmarginx,0) node[left] {$0$}
 %     ({1+\graphmarginx},1) -- (-\graphmarginx,1) node[left] {$1$};
 %   \draw[white!60!black,dashed]
-%     (0,1) -- (0,-\graphmarginy) node[below] {$0$}
-%     (1,1) -- (1,-\graphmarginy) node[below] {$1$};
+%     (0,1) -- (0,-\graphmarginy) node[below] {$a$}
+%     (1,1) -- (1,-\graphmarginy) node[below] {$b$};
 % }{\end{tikzpicture}}
 % \newcommand{\easinggraphplot}[2]{%
 %   \pgfmathparse{#2}
@@ -76,7 +76,18 @@
 
 % \subsubsection{The \texttt{smooth} and \texttt{smoother} shapes}
 
+% The step function form of the |smooth| shape is a third-order
+% Hermite polynomial interpolation between $0$ and $1$, so that the
+% first derivate at the endpoints are zero. It is defined $3t^2-2t^3$
+% for $0\le t\le 1$.
+
+% The step function form of the |smoother| shape is a fifth-order
+% Hermite polynomial interpolation between $0$ and $1$, so that the
+% first and second derivates at the endpoints are zero. It is defined
+% $10t^3-15t^4+6t^5$ for $0\le t\le 1$.
+
 % \foreachtypeeasinggraph{%
+%     \easinggraphplot{smoother\easingtype}{56}
 %     \easinggraphplot{smooth\easingtype}{0}
 % }
 
@@ -85,10 +96,11 @@
 
 % Polynomial easing. The ease-in form is defined as $t^n$ for $0\le
 % t\le 1$, where the exponent $n$ is set by the \pgf{} key
-% |/easing/pow/exponent|, and should be greater than $-1$. The
-% exponent defaults to $2.4$.
+% |/easing/pow/exponent|, and should be greater than $0$. The exponent
+% defaults to $2.4$.
 
-% When $n=1$, the function is linear between $0$ and $1$.
+% When $n=1$, the function is linear between $0$ and $1$. For
+% $0<n\le1$, the ease-in form has discontinuous derivative at $0$.
 
 % The shapes |linear|, |quad|, |cubic|, |quart|, and |quint| are the
 % same functions as |pow| with $n=1,\dots,5$,
@@ -96,12 +108,11 @@
 % \TeX{} registers, which is a little faster and more accurate than
 % setting the argument then evaluating the equivalent |pow| function.
 
-% ^^A TODO: fix behaviour for $-1<n<0$.
-
 % \foreachtypeeasinggraph{%
-%   \foreach\paramv in{0,...,5}{
-%     \pgfmathadd{\paramv}{1}
-%     \pgfkeys{/easing/pow/exponent=\pgfmathresult}
+%     \pgfkeys{/easing/pow/exponent=0.5}
+%     \easinggraphplot{pow\easingtype}{70}
+%   \foreach\paramv in{1,...,4}{
+%     \pgfkeys{/easing/pow/exponent=\paramv}
 %     \easinggraphplot{pow\easingtype}{14*(5-\paramv)}
 %   }
 % }
@@ -124,12 +135,12 @@
 % for $0\le t\le 1$, where the parameter $s$ is set by the \pgf{} key
 % |/easing/back/overshoot|. The parameter $n$ defaults to $1.6$.
 
-% When $s=0$, there is no overshoot, and the function is equivalent to
-% |pow| with $n=3$.
+% When $s\le0$, there is no overshoot. When $s=0$, the function is
+% equivalent to |pow| with $n=3$.
 
 % \foreachtypeeasinggraph{%
 %   \foreach\paramv in{0,...,5}{
-%     \pgfmathmultiply{\paramv}{0.5}
+%     \pgfmathparse{\paramv*0.9-1.8}
 %     \pgfkeys{/easing/back/overshoot=\pgfmathresult}
 %     \easinggraphplot{back\easingtype}{14*(5-\paramv)}
 %   }
@@ -148,8 +159,8 @@
 
 % It is possible that the user is loading this library together with
 % the floating point unit library.  We save the basic routines from
-% |pgfmath| so that when this happens, the FPU doesn't break everything
-% when it does a switcharoo with the |pgfmath| macros.
+% |pgfmath|, so that when this happens, the FPU doesn't break
+% everything when it does a switcharoo with the |pgfmath| macros.
 
 %    \begin{macrocode}
 \newif\ifeasing@withfpu
@@ -216,7 +227,7 @@
   \advance\pgf@xa-\pgf@xc
   \advance\pgf@xb-\pgf@xc
   \easing@divide{\pgfmath@tonumber\pgf@xa}{\pgfmath@tonumber\pgf@xb}%
-  \easing@linearstep@ne\pgfmathresult 
+  \easing@linearstep@ne\pgfmathresult
   \fi
   \pgfmathsmuggle\pgfmathresult
   \endgroup
@@ -415,6 +426,35 @@
 % \end{macro}
 % \end{macro}
 
+% \begin{macro}{\easing@smootherstep@ne}
+% \begin{macro}{\easing@smoothereasein@ne}
+% \begin{macro}{\easing@smoothereaseout@ne}
+
+% The |smoother| shape.
+
+%    \begin{macrocode}
+\def\easing@smootherstep@ne#1{%
+  \begingroup
+  \pgf@x#1pt
+  \edef\pgf@temp{\pgfmath@tonumber\pgf@x}%
+  \multiply\pgf@x 6
+  \advance\pgf@x -15pt
+  \pgf@x\pgf@temp\pgf@x
+  \advance\pgf@x 10pt
+  \pgf@x\pgf@temp\pgf@x
+  \pgf@x\pgf@temp\pgf@x
+  \pgf@x\pgf@temp\pgf@x
+  \pgfmathreturn\pgf@x
+  \endgroup
+}%
+\easing@derive@easein@nefromstep@ne{smoother}%
+\easing@derive@easeout@nefromstep@ne{smoother}%
+\easing@pgfmathinstall{smoother}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+
 % \begin{macro}{\easing@sinestep@ne}
 % \begin{macro}{\easing@sineeasein@ne}
 % \begin{macro}{\easing@sineeaseout@ne}
@@ -605,7 +645,7 @@
   \advance\pgf@x\pgf@temp pt
   \pgf@x\pgf@temp\pgf@x
   \pgf@x\pgf@temp\pgf@x
-  \pgfmathreturn\pgf@x  
+  \pgfmathreturn\pgf@x
   \endgroup
 }%
 \easing@derive@step@nefromeasein@ne{back}%
