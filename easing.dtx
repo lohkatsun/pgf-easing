@@ -17,8 +17,9 @@
 %<*driver>
 \documentclass{ltxdoc}
 \usepackage{parskip}
-\usepackage{pgf}
+\usepackage{tikz}
 \usepgflibrary{easing}
+\newcommand\pgf{\textsc{pgf}}
 \EnableCrossrefs
 \CodelineIndex
 \RecordChanges
@@ -27,24 +28,128 @@
 \end{document}
 %</driver>
 % \fi
-% \title{The \textsf{easing} Library for \textsf{pgfmath}}
+% \title{The \textsf{easing} Library for \pgf}
 % \author{Loh Ka-tsun}
 % \maketitle
+
+% \section{Introduction}
+%
+% This library provides easing functions for the \pgf{} mathematical engine.
+%
 % \section{Usage}
 %
+% \section{List of easing function shapes}
+%
+% ^^A for drawing nice little graphs of the functions. pgfplots is
+% ^^A probably overkill for this, so here's some ad-hoc TikZ-ing
+
+% \newenvironment{easinggraph}{%
+% \begin{tikzpicture}[x=2.8cm,y=2.8cm]
+%   \def\graphmarginx{0.12}
+%   \def\graphmarginy{0.24}
+%   \fill[white!97!black, use as bounding box]
+%     (-\graphmarginx,-\graphmarginy) rectangle
+%     ({1+\graphmarginx},{1+\graphmarginy});
+%   \draw[white!60!black]
+%     ({1+\graphmarginx},0) -- (-\graphmarginx,0) node[left] {$0$}
+%     ({1+\graphmarginx},1) -- (-\graphmarginx,1) node[left] {$1$};
+%   \draw[white!60!black,dashed]
+%     (0,1) -- (0,-\graphmarginy) node[below] {$0$}
+%     (1,1) -- (1,-\graphmarginy) node[below] {$1$};
+% }{\end{tikzpicture}}
+% \newcommand{\easinggraphplot}[2]{%
+%   \pgfmathparse{#2}
+%   \draw[white!\pgfmathresult!black,thick]
+%     (-\graphmarginx,0)
+%     \foreach\x in{0,0.004,...,1}{--(\x,{#1(0,1,\x)})}
+%     -- ({1+\graphmarginx},1);
+% }
+% \newcommand{\foreachtypeeasinggraph}[1]{%
+%   \foreach[count=\easingtypen]\easingtype in{easein,step,easeout}{%
+%   \ifnum\easingtypen>1\hspace{\fill}\fi
+%   \begin{easinggraph}#1\end{easinggraph}
+%   }
+%   \vspace{1\baselineskip}
+% }
+%
+% \subsection{Polynomial and trigonometric}
+
+% \subsubsection{The \texttt{smooth} and \texttt{smoother} shapes}
+
+% \foreachtypeeasinggraph{%
+%     \easinggraphplot{smooth\easingtype}{0}
+% }
+
+% \subsubsection{The \texttt{pow} shape and friends (\texttt{linear}, \texttt{quad},
+% \texttt{cubic}, \texttt{quart}, and \texttt{quint})}
+
+% Polynomial easing. The ease-in form is defined as $t^n$ for $0\le
+% t\le 1$, where the exponent $n$ is set by the \pgf{} key
+% |/easing/pow/exponent|, and should be greater than $-1$. The
+% exponent defaults to $2.4$.
+
+% When $n=1$, the function is linear between $0$ and $1$.
+
+% The shapes |linear|, |quad|, |cubic|, |quart|, and |quint| are the
+% same functions as |pow| with $n=1,\dots,5$,
+% respectively. Computations for these shapes are implemented with
+% \TeX{} registers, which is a little faster and more accurate than
+% setting the argument then evaluating the equivalent |pow| function.
+
+% ^^A TODO: fix behaviour for $-1<n<0$.
+
+% \foreachtypeeasinggraph{%
+%   \foreach\paramv in{0,...,5}{
+%     \pgfmathadd{\paramv}{1}
+%     \pgfkeys{/easing/pow/exponent=\pgfmathresult}
+%     \easinggraphplot{pow\easingtype}{14*(5-\paramv)}
+%   }
+% }
+
+% \subsubsection{The \texttt{sine} shape}
+
+% An easing function that looks like a section of a sinusoid. The ease-out form is
+% defined as $\sin(\frac{\pi}{2}t)$ for $0\le t\le 1$.
+
+% \foreachtypeeasinggraph{%
+%   \easinggraphplot{sine\easingtype}{0}
+% }
+
+
+% \subsection{Other}
+
+% \subsubsection{The \texttt{back} shape}
+
+% Anticipatory easing. The ease-in form is defined as $t^2(1-t)s+t^3$
+% for $0\le t\le t$, where the parameter $s$ is set by the \pgf{} key
+% |/easing/back/overshoot|. The parameter $n$ defaults to $1.6$.
+
+% When $s=0$, there is no overshoot, and the function is equivalent to
+% |pow| with $n=3$.
+
+% \foreachtypeeasinggraph{%
+%   \foreach\paramv in{0,...,5}{
+%     \pgfmathmultiply{\paramv}{0.5}
+%     \pgfkeys{/easing/back/overshoot=\pgfmathresult}
+%     \easinggraphplot{back\easingtype}{14*(5-\paramv)}
+%   }
+% }
+
+
+
 % \StopEventually{}
 % \section{Implementation}
 
 % \begin{macro}{\ifeasing@withfpu}
 % \begin{macro}{\easing@divide}
 
-% This library uses \TeX{} registers and |pgf|'s mathematical engine for
+% This library uses \TeX{} registers and \pgf's mathematical engine for
 % computations.
 
 % It is possible that the user is loading this library together with
-% |fpu|.  We save the basic routines from |pgfmath| so that when this
-% happens, |fpu| doesn't break everything when it does a switcharoo
-% with the |pgfmath| macros.
+% the floating point unit library.  We save the basic routines from
+% |pgfmath| so that when this happens, the FPU doesn't break everything
+% when it does a switcharoo with the |pgfmath| macros.
 
 %    \begin{macrocode}
 \newif\ifeasing@withfpu
@@ -73,7 +178,7 @@
 % \begin{macro}{\easing@linearstep@float}
 % \begin{macro}{\easing@linearstep}
 
-% In absence of |fpu|, the next section of code defines
+% In absence of the FPU, the next section of code defines
 % |\easing@linearstep|, which expects as arguments plain numbers
 % (i.e. things that can be assigned to dimension registers). The net
 % effect of |\easing@linearstep{#1}{#2}{#3}| is to set
@@ -81,10 +186,10 @@
 % $\frac{\mathtt{\#3}-\mathtt{\#1}}{\mathtt{\#2}-\mathtt{\#1}}$,
 % clamped to between $0$ and $1$.
 
-% If |fpu| is loaded, |\easing@linearstep| is instead named
+% If the FPU is loaded, |\easing@linearstep| is instead named
 % |\easing@linearstep@fixed|, and we additionally define
-% |\easing@linearstep@float|, which expects |fpu|-format floats as
-% arguments. We do not format the output as a float since |fpu| is
+% |\easing@linearstep@float|, which expects FPU-format floats as
+% arguments. We do not format the output as a float since the FPU is
 % smart enough to do that conversion quietly on its own.
 
 % The |\easing@linearstep| routine is the first step in the definition
@@ -168,7 +273,7 @@
 % \end{macro}
 
 % ^^A the next few macros have long names, so we scoot this page to
-%     the right to make space in the margins:
+% ^^A the right to make space in the margins:
 
 % \begingroup
 % \addtolength\oddsidemargin{50pt}
@@ -357,7 +462,7 @@
 
 % The |pow| shape.
 
-% Because of some wonkiness in in |fpu|, instead of invoking the |pow|
+% Because of some wonkiness in the FPU, instead of invoking the |pow|
 % function from |pgfmath|, we compute $t^n$ approximately by computing
 % $e^{n\ln t}$ using |ln| and |exp| instead (which is what |pgfmath|
 % does anyway when the exponent is not an integer.)
@@ -407,10 +512,7 @@
 % \begin{macro}{\easing@quinteaseout@ne}
 
 % The |quad|--, |cubic|--, |quart|--, and |quint|-- routines have
-% explicit definitions. The small integer exponents are computed with
-% \TeX{} registers, which is probably a little faster and more
-% accurate than setting the argument then evaluating the equivalent
-% |pow|-- routine.
+% explicit definitions.
 
 %    \begin{macrocode}
 \def\easing@quadeasein@ne#1{%
