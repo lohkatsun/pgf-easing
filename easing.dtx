@@ -73,7 +73,6 @@
 % \pgf{}'s mathematical engine with |\pgfmathdeclarefunction|, so that
 % they are recognised by by |\pgfmathparse| and can be used in any
 % expression which is processed by the parser.
-
 % As a first example, the following code produces plots of the
 % function |smoothstep(|$a$|,|$b$|,|$x$|)| against the argument $x$,
 % with one endpoint $a=0$ and the other endpoint $b$ ranging through
@@ -288,12 +287,29 @@
 %     \foreach\x in{0,0.02,...,1}{--(\x,{#1(0,1,\x)})}
 %     -- (1,1) -- ({1+\graphmarginx},1);
 % }
+% \newcommand{\easinggraphplotfive}[4]{%
+%   \easinggraphlabel{#1\easingtype}{
+%     \foreach[count=\countv]\paramv
+%       in{#4}{\pgfmathparse{
+%         14*(5-\countv)}{\color{
+%         white!\pgfmathresult!black}\ifnum\countv=1\relax
+%         #3=\else,\fi\paramv}}}
+%   \foreach[count=\countv]\paramv in{#4}{%
+%     \pgfkeys{/easing/#1/#2=\paramv}
+%     \easinggraphplot{#1\easingtype}{14*(5-\countv)}
+%   }
+% }
+% \newcommand{\easinggraphlabel}[2]{%
+%   \node[anchor=text] at (-\graphmarginx,{1+\graphmarginy})
+%     {\footnotesize\tt\raisebox{\baselineskip}{\parbox{3.5cm}{#1\\[-0.4ex]#2}}};
+% }
 % \newcommand{\foreachtypeeasinggraph}[1]{%
+%   \vspace{2\baselineskip}
 %   \foreach[count=\easingtypen]\easingtype in{easein,step,easeout}{%
 %   \ifnum\easingtypen>1\hspace{\fill}\fi
 %   \begin{easinggraph}#1\end{easinggraph}
 %   }
-%   \vspace{1\baselineskip}
+%   \vspace{\baselineskip}
 % }
 %
 % \subsection{Polynomials}
@@ -311,7 +327,8 @@
 % $10t^3-15t^4+6t^5$ for $0\le t\le 1$.
 
 % \foreachtypeeasinggraph{%
-%     \easinggraphplot{smoother\easingtype}{56}
+%     \easinggraphlabel{smooth\easingtype}{{\color{white!44!black}smoother\easingtype}}
+%     \easinggraphplot{smoother\easingtype}{44}
 %     \easinggraphplot{smooth\easingtype}{0}
 % }
 
@@ -333,13 +350,7 @@
 % setting the argument then evaluating the equivalent |pow| function.
 
 % \foreachtypeeasinggraph{%
-%     \pgfkeys{/easing/pow/exponent=0.5}
-%     \easinggraphplot{pow\easingtype}{70}
-%   \foreach\paramv in{1,...,4}{
-%     \pgfkeys{/easing/pow/exponent=\paramv}
-%     \easinggraphplot{pow\easingtype}{14*(5-\paramv)}
-%   }
-% }
+%   \easinggraphplotfive{pow}{exponent}{n}{0.5,1,2,3,4}}
 
 % \subsection{Trigonometric and exponential}
 
@@ -348,30 +359,27 @@
 % An easing function that looks like a section of a sinusoid. The ease-out form is
 % defined as $\sin(\frac{\pi}{2}t)$ for $0\le t\le 1$.
 
+% This shape admits no parameters.
+
 % \foreachtypeeasinggraph{%
-%   \easinggraphplot{sine\easingtype}{0}
-% }
+%   \easinggraphlabel{\phantom{nothing here}}{sine\easingtype}
+%   \easinggraphplot{sine\easingtype}{0}}
 
 % \subsubsection{The \texttt{exp} shape}
 
 % An easing function that looks like an exponential function. The
-% ease-in form is defined as $e^{\alpha (t-1)}$ for $0\le t\le 1$, where
-% the parameter $\alpha$ is set by the \pgf{} key |/easing/exp/speed|,
+% ease-in form is defined as $e^{c (t-1)}$ for $0\le t\le 1$, where
+% the parameter $c$ is set by the \pgf{} key |/easing/exp/speed|,
 % and should be greater than $0$. The parameter defaults to
-% $\alpha=7.2$.
+% $c=7.2$.
 
 % Because of the nature of the exponential function, this shape is
 % only approximately continuous at the endpoints $a$ and $b$. In
 % practice, the discontinuity only becomes noticeable for small
-% $\alpha$, around $\alpha\le 4$.
+% $c$, around $c\le 4$.
 
 % \foreachtypeeasinggraph{%
-%   \foreach\paramv in{0,...,4}{
-%     \pgfmathparse{4*(\paramv+1.2)}%
-%     \pgfkeys{/easing/exp/speed=\pgfmathresult}
-%     \easinggraphplot{exp\easingtype}{14*(5-\paramv)}
-%   }
-% }
+%   \easinggraphplotfive{exp}{speed}{c}{4,7,10,13,16}}
 
 % \subsection{Other}
 
@@ -379,18 +387,13 @@
 
 % Anticipatory easing. The ease-in form is defined as $t^2(1-t)s+t^3$
 % for $0\le t\le 1$, where the parameter $s$ is set by the \pgf{} key
-% |/easing/back/overshoot|. The parameter defaults to $n=1.6$.
+% |/easing/back/overshoot|. The parameter defaults to $s=1.6$.
 
 % When $s\le0$, there is no overshoot. When $s=0$, the function is
 % equivalent to |pow| with $n=3$.
 
 % \foreachtypeeasinggraph{%
-%   \foreach\paramv in{0,...,5}{
-%     \pgfmathparse{\paramv*0.9-1.8}
-%     \pgfkeys{/easing/back/overshoot=\pgfmathresult}
-%     \easinggraphplot{back\easingtype}{14*(5-\paramv)}
-%   }
-% }
+%   \easinggraphplotfive{back}{overshoot}{s}{-0.8,0.0,0.8,1.6,2.4}}
 
 
 
