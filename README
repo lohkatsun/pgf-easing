@@ -1,0 +1,17 @@
+easing -- easing functions for pgfmath
+
+DESCRIPTION
+
+This library implements a collection of easing functions, and adds
+them to the PGF mathematical engine.
+
+Works with TeX and LaTeX.
+
+LICENSE
+
+This material is subject to the LaTeX Project Public License version
+1.3 or later.
+
+CHANGELOG
+
+0.1 - initial release.
