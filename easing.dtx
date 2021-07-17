@@ -352,6 +352,18 @@
 % \foreachtypeeasinggraph{%
 %   \easinggraphplotfive{pow}{exponent}{n}{0.5,1,2,3,4}}
 
+% \subsubsection{The \texttt{back} shape}
+
+% Anticipatory easing. The ease-in form is defined as $t^2(1-t)s+t^3$
+% for $0\le t\le 1$, where the parameter $s$ is set with the \pgf{} key
+% |/easing/back/overshoot|. The parameter defaults to $s=1.6$.
+
+% When $s\le0$, there is no overshoot. When $s=0$, the function is
+% equivalent to |pow| with $n=3$.
+
+% \foreachtypeeasinggraph{%
+%   \easinggraphplotfive{back}{overshoot}{s}{-0.8,0.0,0.8,1.6,2.4}}
+
 % \subsection{Trigonometric and exponential}
 
 % \subsubsection{The \texttt{sine} shape}
@@ -383,17 +395,14 @@
 
 % \subsection{Other}
 
-% \subsubsection{The \texttt{back} shape}
+% \subsubsection{The \texttt{circ} shape}
 
-% Anticipatory easing. The ease-in form is defined as $t^2(1-t)s+t^3$
-% for $0\le t\le 1$, where the parameter $s$ is set with the \pgf{} key
-% |/easing/back/overshoot|. The parameter defaults to $s=1.6$.
-
-% When $s\le0$, there is no overshoot. When $s=0$, the function is
-% equivalent to |pow| with $n=3$.
+% An easing function whose graph is part of an ellipse. This shape
+% admits no parameters.
 
 % \foreachtypeeasinggraph{%
-%   \easinggraphplotfive{back}{overshoot}{s}{-0.8,0.0,0.8,1.6,2.4}}
+%   \easinggraphlabel{\phantom{nothing here}}{circ\easingtype}
+%   \easinggraphplot{circ\easingtype}{0}}
 
 % \subsubsection{The \texttt{elastic} shape}
 
@@ -452,15 +461,17 @@
 \easing@withfputrue
 \fi
 \ifeasing@withfpu
-\let\easing@divide\pgfmath@basic@divide@
 \let\easing@cos\pgfmath@basic@cos@
+\let\easing@divide\pgfmath@basic@divide@
 \let\easing@exp\pgfmath@basic@exp@
 \let\easing@ln\pgfmath@basic@ln@
+\let\easing@sqrt\pgfmath@basic@sqrt@
 \else
-\let\easing@divide\pgfmathdivide@
 \let\easing@cos\pgfmathcos@
+\let\easing@divide\pgfmathdivide@
 \let\easing@exp\pgfmathexp@
 \let\easing@ln\pgfmathln@
+\let\easing@sqrt\pgfmathsqrt@
 \fi
 %    \end{macrocode}
 % \end{macro}
@@ -737,47 +748,6 @@
 % \end{macro}
 % \end{macro}
 
-% \begin{macro}{\easing@sinestep@ne}
-% \begin{macro}{\easing@sineeasein@ne}
-% \begin{macro}{\easing@sineeaseout@ne}
-
-% The |sine| shape.
-
-% We write down both the |easein| and |step| forms of this, since they
-% are simple compared to what would have been obtained by
-% |\easing@derive|--.
-
-%    \begin{macrocode}
-\def\easing@sineeasein@ne#1{%
-  \begingroup
-  \pgf@x#1pt
-  \multiply\pgf@x 90
-  \easing@cos{\pgfmath@tonumber\pgf@x}%
-  \pgf@x\pgfmathresult pt
-  \multiply\pgf@x -1
-  \advance\pgf@x 1pt
-  \pgfmathreturn\pgf@x
-  \endgroup
-}%
-\def\easing@sinestep@ne#1{%
-  \begingroup
-  \pgf@x#1pt
-  \multiply\pgf@x 180
-  \easing@cos{\pgfmath@tonumber\pgf@x}%
-  \pgf@x\pgfmathresult pt
-  \divide\pgf@x 2
-  \multiply\pgf@x -1
-  \advance\pgf@x 0.5pt
-  \pgfmathreturn\pgf@x
-  \endgroup
-}%
-\easing@derive@easeout@nefromeasein@ne{sine}%
-\easing@pgfmathinstall{sine}%
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-
 % \begin{macro}{\easing@powstep@ne}
 % \begin{macro}{\easing@poweasein@ne}
 % \begin{macro}{\easing@poweaseout@ne}
@@ -907,6 +877,78 @@
 % \end{macro}
 % \end{macro}
 
+% \begin{macro}{\easing@backstep@ne}
+% \begin{macro}{\easing@backeasein@ne}
+% \begin{macro}{\easing@backeaseout@ne}
+
+% The |back| shape.
+
+%    \begin{macrocode}
+\pgfkeys{easing,
+  back/overshoot/.estore in=\easing@param@back@overshoot,
+  back/overshoot/.default=1.6,
+  back/overshoot}%
+\def\easing@backeasein@ne#1{%
+  \begingroup
+  \pgf@x#1pt
+  \edef\pgf@temp{\pgfmath@tonumber\pgf@x}%
+  \advance\pgf@x -1pt
+  \pgf@x\easing@param@back@overshoot\pgf@x
+  \advance\pgf@x\pgf@temp pt
+  \pgf@x\pgf@temp\pgf@x
+  \pgf@x\pgf@temp\pgf@x
+  \pgfmathreturn\pgf@x
+  \endgroup
+}%
+\easing@derive@step@nefromeasein@ne{back}%
+\easing@derive@easeout@nefromeasein@ne{back}%
+\easing@pgfmathinstall{back}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+
+% \begin{macro}{\easing@sinestep@ne}
+% \begin{macro}{\easing@sineeasein@ne}
+% \begin{macro}{\easing@sineeaseout@ne}
+
+% The |sine| shape.
+
+% We write down both the |easein| and |step| forms of this, since they
+% are simple compared to what would have been obtained by
+% |\easing@derive|--.
+
+%    \begin{macrocode}
+\def\easing@sineeasein@ne#1{%
+  \begingroup
+  \pgf@x#1pt
+  \multiply\pgf@x 90
+  \easing@cos{\pgfmath@tonumber\pgf@x}%
+  \pgf@x\pgfmathresult pt
+  \multiply\pgf@x -1
+  \advance\pgf@x 1pt
+  \pgfmathreturn\pgf@x
+  \endgroup
+}%
+\def\easing@sinestep@ne#1{%
+  \begingroup
+  \pgf@x#1pt
+  \multiply\pgf@x 180
+  \easing@cos{\pgfmath@tonumber\pgf@x}%
+  \pgf@x\pgfmathresult pt
+  \divide\pgf@x 2
+  \multiply\pgf@x -1
+  \advance\pgf@x 0.5pt
+  \pgfmathreturn\pgf@x
+  \endgroup
+}%
+\easing@derive@easeout@nefromeasein@ne{sine}%
+\easing@pgfmathinstall{sine}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+
 % \begin{macro}{\easing@expstep@ne}
 % \begin{macro}{\easing@expeasein@ne}
 % \begin{macro}{\easing@expeaseout@ne}
@@ -936,33 +978,30 @@
 % \end{macro}
 % \end{macro}
 
-% \begin{macro}{\easing@backstep@ne}
-% \begin{macro}{\easing@backeasein@ne}
-% \begin{macro}{\easing@backeaseout@ne}
+% \begin{macro}{\easing@circstep@ne}
+% \begin{macro}{\easing@circeasein@ne}
+% \begin{macro}{\easing@circeaseout@ne}
 
-% The |back| shape.
+% The |circ| shape.
 
 %    \begin{macrocode}
-\pgfkeys{easing,
-  back/overshoot/.estore in=\easing@param@back@overshoot,
-  back/overshoot/.default=1.6,
-  back/overshoot}%
-\def\easing@backeasein@ne#1{%
+\def\easing@circeasein@ne#1{%
   \begingroup
   \pgf@x#1pt
-  \edef\pgf@temp{\pgfmath@tonumber\pgf@x}%
   \advance\pgf@x -1pt
-  \pgf@x\easing@param@back@overshoot\pgf@x
-  \advance\pgf@x\pgf@temp pt
+  \edef\pgf@temp{\pgfmath@tonumber\pgf@x}%
   \pgf@x\pgf@temp\pgf@x
-  \pgf@x\pgf@temp\pgf@x
-  \pgfmathreturn\pgf@x
+  \multiply\pgf@x -1
+  \advance\pgf@x 1pt
+  \easing@sqrt{\pgfmath@tonumber\pgf@x}%
+  \pgfmathsmuggle\pgfmathresult
   \endgroup
 }%
-\easing@derive@step@nefromeasein@ne{back}%
-\easing@derive@easeout@nefromeasein@ne{back}%
-\easing@pgfmathinstall{back}%
+\easing@derive@step@nefromeasein@ne{circ}%
+\easing@derive@easeout@nefromeasein@ne{circ}%
+\easing@pgfmathinstall{circ}%
 %    \end{macrocode}
+
 % \end{macro}
 % \end{macro}
 % \end{macro}
