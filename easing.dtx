@@ -266,10 +266,10 @@
 % ^^A for drawing nice little graphs of the functions. pgfplots is
 % ^^A probably overkill for this, so here's some ad-hoc TikZ-ing
 
-% \newenvironment{easinggraph}{%
-% \begin{tikzpicture}[x=2.8cm,y=2.8cm]
 %   \def\graphmarginx{0.12}
 %   \def\graphmarginy{0.24}
+% \newenvironment{easinggraph}{%
+% \begin{tikzpicture}[x=2.8cm,y=2.8cm]
 %   \fill[white!97!black, use as bounding box]
 %     (-\graphmarginx,-\graphmarginy) rectangle
 %     ({1+\graphmarginx},{1+\graphmarginy});
@@ -291,12 +291,12 @@
 %   \easinggraphlabel{#1\easingtype}{
 %     \foreach[count=\countv]\paramv
 %       in{#4}{\pgfmathparse{
-%         14*(5-\countv)}{\color{
+%         18*(5-\countv)}{\color{
 %         white!\pgfmathresult!black}\ifnum\countv=1\relax
 %         #3=\else,\fi\paramv}}}
 %   \foreach[count=\countv]\paramv in{#4}{%
 %     \pgfkeys{/easing/#1/#2=\paramv}
-%     \easinggraphplot{#1\easingtype}{14*(5-\countv)}
+%     \easinggraphplot{#1\easingtype}{18*(5-\countv)}
 %   }
 % }
 % \newcommand{\easinggraphlabel}[2]{%
@@ -327,8 +327,8 @@
 % $10t^3-15t^4+6t^5$ for $0\le t\le 1$.
 
 % \foreachtypeeasinggraph{%
-%     \easinggraphlabel{smooth\easingtype}{{\color{white!44!black}smoother\easingtype}}
-%     \easinggraphplot{smoother\easingtype}{44}
+%     \easinggraphlabel{smooth\easingtype}{{\color{white!46!black}smoother\easingtype}}
+%     \easinggraphplot{smoother\easingtype}{46}
 %     \easinggraphplot{smooth\easingtype}{0}
 % }
 
@@ -336,7 +336,7 @@
 % \texttt{cubic}, \texttt{quart}, and \texttt{quint})}
 
 % Polynomial easing. The ease-in form is defined as $t^n$ for $0\le
-% t\le 1$, where the exponent $n$ is set by the \pgf{} key
+% t\le 1$, where the exponent $n$ is set with the \pgf{} key
 % |/easing/pow/exponent|, and should be greater than $0$. The parameter
 % defaults to $n=2.4$.
 
@@ -369,7 +369,7 @@
 
 % An easing function that looks like an exponential function. The
 % ease-in form is defined as $e^{c (t-1)}$ for $0\le t\le 1$, where
-% the parameter $c$ is set by the \pgf{} key |/easing/exp/speed|,
+% the parameter $c$ is set with the \pgf{} key |/easing/exp/speed|,
 % and should be greater than $0$. The parameter defaults to
 % $c=7.2$.
 
@@ -386,7 +386,7 @@
 % \subsubsection{The \texttt{back} shape}
 
 % Anticipatory easing. The ease-in form is defined as $t^2(1-t)s+t^3$
-% for $0\le t\le 1$, where the parameter $s$ is set by the \pgf{} key
+% for $0\le t\le 1$, where the parameter $s$ is set with the \pgf{} key
 % |/easing/back/overshoot|. The parameter defaults to $s=1.6$.
 
 % When $s\le0$, there is no overshoot. When $s=0$, the function is
@@ -395,7 +395,40 @@
 % \foreachtypeeasinggraph{%
 %   \easinggraphplotfive{back}{overshoot}{s}{-0.8,0.0,0.8,1.6,2.4}}
 
+% \subsubsection{The \texttt{elastic} shape}
 
+% Easing function that looks like a damped harmonic oscillator. The
+% ease-out form is defined as $e^c(t-1)\cos(2\pi f (1-t))$. This shape
+% admits two parameters:
+
+% \begin{itemize}
+
+% \item The frequency $f$ is the number of oscillations between the
+% endpoints. It is set with the \pgf{} key
+% |/easing/elastic/frequency|, and should be greater than $0$. The
+% frequency defaults to $f=3$.
+
+% \item The damping coefficient $b$ affects the speed at which the
+% amplitude decays. It is set with the \pgf{} key
+% |/easing/elastic/damping|, and should be greater than zero. The
+% damping coefficient defaults to $b=7.2$.
+
+% \end{itemize}
+
+% The function overshoots the range $[0,1]$ when $f>0.5$. For $0<f\le
+% 1$, this function becomes a family of anticipatory easing curves
+% that look slightly different from the |back| shape but are more
+% expensive to compute.
+
+% ^^A twiddle with the size of the background so that the curves don't
+% ^^A overshoot the box
+
+% \def\graphmarginy{0.5}
+
+% \foreachtypeeasinggraph{%
+%   \easinggraphplotfive{elastic}{frequency}{f}{0.5,1.4,2.3,3.2,4.1}}
+
+% \def\graphmarginy{0.24}
 
 % \StopEventually{}
 % \section{Implementation}
@@ -878,6 +911,8 @@
 % \begin{macro}{\easing@expeasein@ne}
 % \begin{macro}{\easing@expeaseout@ne}
 
+% The |exp| shape.
+
 %    \begin{macrocode}
 \pgfkeys{easing,
   exp/speed/.estore in=\easing@param@exponent@speed,
@@ -900,7 +935,6 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-
 
 % \begin{macro}{\easing@backstep@ne}
 % \begin{macro}{\easing@backeasein@ne}
@@ -933,5 +967,40 @@
 % \end{macro}
 % \end{macro}
 
+% \begin{macro}{\easing@elasticstep@ne}
+% \begin{macro}{\easing@elasticeasein@ne}
+% \begin{macro}{\easing@elasticeaseout@ne}
+
+% The |elastic| shape.
+
+%    \begin{macrocode}
+\pgfkeys{easing,
+  elastic/frequency/.estore in=\easing@param@elastic@frequency,
+  elastic/damping/.estore in=\easing@param@elastic@damping,
+  elastic/frequency/.default=3,
+  elastic/damping/.default=7.2,
+  elastic/frequency, elastic/damping}%
+\def\easing@elasticeasein@ne#1{%
+  \begingroup
+  \pgf@xa#1pt
+  \advance\pgf@xa -1pt
+  \pgf@xb-\pgf@xa
+  \pgf@xa\easing@param@elastic@damping\pgf@xa
+  \easing@exp{\pgfmath@tonumber\pgf@xa}%
+  \pgf@xa\pgfmathresult pt
+  \pgf@xb 360\pgf@xb
+  \pgf@xb\easing@param@elastic@frequency\pgf@xb
+  \easing@cos{\pgfmath@tonumber\pgf@xb}%
+  \pgf@xa\pgfmathresult\pgf@xa
+  \pgfmathreturn\pgf@xa
+  \endgroup
+}%
+\easing@derive@step@nefromeasein@ne{elastic}%
+\easing@derive@easeout@nefromeasein@ne{elastic}%
+\easing@pgfmathinstall{elastic}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 
 % \Finale
